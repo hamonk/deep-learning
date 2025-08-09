@@ -52,3 +52,48 @@ Orthogonal initialization sets the weight matrix so its rows (or columns) are or
 **Key property:** Orthogonal matrices preserve variance — they don’t change the length of a vector (up to a scaling factor). This helps keep activations and gradients from exploding or vanishing, even across many layers.
 
 By preserving the spread of the data in early layers, the network keeps more useful information for the later ones — which is exactly what fixed my yin–yang classification problem.
+
+## SVD = Singular Value Decomposition
+
+One way to check if matrix are problematic is by using ```torch.linalg.svd```
+
+Here are the values I get:
+```text
+RANDOM INITIALIZATION
+
+for x in range(8):
+    u, s, v = torch.linalg.svd(model.layers[x].weight.detach())
+    print(f"Layer {x} singular values: {s}")
+
+Layer 0 singular values: tensor([0.9221, 0.4884])
+Layer 1 singular values: tensor([0.9710, 0.0936])
+Layer 2 singular values: tensor([0.6273, 0.1235])
+Layer 3 singular values: tensor([0.4757, 0.1770])
+Layer 4 singular values: tensor([0.7705, 0.2222])
+Layer 5 singular values: tensor([0.9553, 0.4274])
+Layer 6 singular values: tensor([0.6217, 0.1350])
+Layer 7 singular values: tensor([0.7096, 0.5015])
+
+ORTHOGONAL INITIALIZATION
+
+for x in range(8):
+    u, s, v = torch.linalg.svd(model_with_initialization.layers[x].weight.detach())
+    print(f"Layer {x} singular values: {s}")
+
+Layer 0 singular values: tensor([1.7645, 0.2109])
+Layer 1 singular values: tensor([1.5999, 1.0709])
+Layer 2 singular values: tensor([1.4989, 0.8290])
+Layer 3 singular values: tensor([1.5814, 0.5803])
+Layer 4 singular values: tensor([1.6148, 0.7659])
+Layer 5 singular values: tensor([1.6656, 0.8657])
+Layer 6 singular values: tensor([1.8517, 0.8446])
+Layer 7 singular values: tensor([2.1327, 0.8531])
+```
+
+If s[1] is very small compared to s[0], then W is nearly rank 1.
+
+We can see that the Layer 1 with random initialization, s[1] is 0.0936 << 0.9710 (s[0])
+
+## Code
+
+![notebook is here](https://github.com/hamonk/deep-learning/blob/main/the_value_of_initialization/the_value_of_initialization.ipynb)
